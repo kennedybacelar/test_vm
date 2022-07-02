@@ -3,7 +3,7 @@ import sqlite3
 
 class SQLConnection:
     def __init__(self):
-        self.con = sqlite3.connect(":memory:")
+        self.con = sqlite3.connect(":memory:", check_same_thread=False)
         self.tables = {
             "users": ("username", "password", "balance", "role"),
             "products": ("name", "cost", "amount_available", "seller_id"),
@@ -25,6 +25,7 @@ class SQLConnection:
         cur.execute(
             f"insert into {table_name}{tuple(data.keys())} values {tuple(data.values())}"
         )
+        return True
 
 
 sql_connection = SQLConnection()
