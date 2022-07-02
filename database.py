@@ -18,7 +18,10 @@ class SQLConnection:
     def selecting_from_table(self, table_name: str):
         cur = self.con.cursor()
         cur.execute(f"select * from {table_name}")
-        return cur.fetchall()
+        # To return the header (column names), since sqlite doesn't support information_schema
+        return [
+            dict(zip([d[0] for d in cur.description], row)) for row in cur.fetchall()
+        ]
 
     def inserting_into_table(self, table_name: str, data: dict):
         cur = self.con.cursor()

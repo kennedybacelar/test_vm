@@ -1,6 +1,5 @@
-from enum import Enum
-from wsgiref import validate
 from pydantic import BaseModel, validator
+from typing import Optional
 
 
 class DepositValue(BaseModel):
@@ -34,7 +33,7 @@ class Product(BaseModel):
     name: str
     cost: int
     amount_available: int
-    seller_id: int
+    seller_id: Optional[int] = 0
 
     @validator("cost")
     def must_be_multiple_of_5(cls, v):
