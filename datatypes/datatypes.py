@@ -3,9 +3,9 @@ from typing import Optional
 
 
 class DepositValue(BaseModel):
-    deposit_value: int
+    value: int
 
-    @validator("deposit_value")
+    @validator("value")
     def must_be_in_following_coin_values(cls, v):
         allowed_coin_values = (5, 10, 20, 50, 100)
         if v not in allowed_coin_values:
