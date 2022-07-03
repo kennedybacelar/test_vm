@@ -30,6 +30,7 @@ class User(BaseModel):
 
 
 class Product(BaseModel):
+    id: str
     name: str
     cost: int
     amount_available: int

@@ -10,6 +10,11 @@ def get_all_users_():
     return get_all_users()
 
 
+@router.get("/users/me")
+def get_my_user_info():
+    return "my user info"
+
+
 @router.post("/users")
 def register_user(user: User):
     return registering_user(user)

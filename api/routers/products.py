@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from datatypes.datatypes import Product
-from core.core_functions import get_all_products, add_product
+from core.core_functions import get_all_products, add_product, update_product
 
 router = APIRouter()
 
@@ -15,9 +15,9 @@ def add_product_(product: Product):
     return add_product(product)
 
 
-@router.put("/products")
-def update_product(product: Product):
-    return "Updating product"
+@router.put("/products/{product_id}")
+def update_product_(product: Product):
+    return update_product(product)
 
 
 @router.delete("/products/{product_it}")
