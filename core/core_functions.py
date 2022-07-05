@@ -1,6 +1,6 @@
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional
 import bcrypt
-from datatypes.datatypes import User, Product
+from datatypes.datatypes import User, Product, ProductPurchase
 from database import sql_connection
 
 
@@ -26,6 +26,24 @@ def is_authentication_successful(username: Union[str, int], password: str):
     return False
 
 
+def _get_user_role(username: str) -> Tuple[bool, Optional[str]]:
+    return sql_connection.select_single_value_from_table_by_reference(
+        table_name="users",
+        column_name="role",
+        reference_column="username",
+        reference_value=username,
+    )
+
+
+def _get_product_seller_id(product_id: str) -> Tuple[bool, Optional[str]]:
+    return sql_connection.select_single_value_from_table_by_reference(
+        table_name="products",
+        column_name="seller_id",
+        reference_column="id",
+        reference_value=product_id,
+    )
+
+
 def registering_user(user: User) -> bool:
     return sql_connection.inserting_into_table(table_name="users", data=dict(user))
 
@@ -39,42 +57,58 @@ def get_all_products() -> List[Product]:
 
 
 def add_product(product: Product, username: str) -> bool:
-    if _get_user_role(username) == "seller":
+    _, user_role = _get_user_role(username)
+    if user_role == "seller":
         product.seller_id = username
         return sql_connection.inserting_into_table(
             table_name="products", data=dict(product)
         )
-    return {"user should be seller to register products"}
+    return {"message": "user should be seller to register products"}
 
 
-def update_product(product_id: str, product: Product) -> bool:
-    product_id = product_id
-    return sql_connection.update_existing_entry(
-        table_name="products",
-        reference_column="id",
-        reference_value=product_id,
-        data_to_be_update=dict(product),
-    )
+def update_product(
+    product_id: str, product: Product, username: str
+) -> Union[bool, dict]:
+    _, product_seller_id = _get_product_seller_id(product_id)
+    if product_seller_id == username:
+        return sql_connection.update_existing_entry(
+            table_name="products",
+            reference_column="id",
+            reference_value=product_id,
+            data_to_be_update=dict(product),
+        )
+    return {
+        "message": "username authenticated different of seller id who created the product"
+    }
 
 
-def delete_product(product_id: str) -> bool:
-    return sql_connection.delete_entry(
-        table_name="products", reference_column="id", reference_value=product_id
-    )
+def delete_product(product_id: str, username: str) -> bool:
+    _, product_seller_id = _get_product_seller_id(product_id)
+    if product_seller_id == username:
+        return sql_connection.delete_entry(
+            table_name="products", reference_column="id", reference_value=product_id
+        )
+    return {
+        "message": "username authenticated different of seller id who created the product"
+    }
 
 
 def get_user_balance(username: str) -> dict:
     return sql_connection.get_user_balance(username=username)
 
 
-def deposit_into_vendor_machine(deposit_value: int) -> dict:
+def get_my_user_info(username: str) -> dict:
+    return sql_connection.get_user_by_id(username)
+
+
+def deposit_into_vendor_machine(deposit_value: int, username: str) -> dict:
     return sql_connection.deposit_into_vendor_machine(
-        username="kenn.galo", deposit_value=deposit_value
+        username=username, deposit_value=deposit_value
     )
 
 
-def reset_user_balance() -> dict:
-    return sql_connection.reset_user_balance(username="kenn.galo")
+def reset_user_balance(username: str) -> dict:
+    return sql_connection.reset_user_balance(username=username)
 
 
 def update_user(username: str, user: User):
@@ -92,26 +126,12 @@ def delete_user(username: str):
     )
 
 
-def _get_user_role(username: str) -> Tuple[bool, str]:
-    return sql_connection.select_single_value_from_table_by_reference(
-        table_name="users",
-        column_name="role",
-        reference_column="username",
-        reference_value=username,
-    )[1]
-
-
-def buy_product(product_id):
-    _, user_role = _get_user_role(username="yan.bacelar")
+def buy_product(product_purchase: ProductPurchase, username: str):
+    _, user_role = _get_user_role(username)
     if user_role == "buyer":
-        return "eh comprador"
-    elif user_role == "seller":
-        return "vendedor"
-
-
-def is_user_authenticated():
-    pass
-
-
-def get_user_role():
-    pass
+        return sql_connection.buy_product(
+            product_id=product_purchase.product_id,
+            amount_to_be_purchased=product_purchase.amount,
+            username=username,
+        )
+    return {"message": "User needs to be a buyer in order to perform this operation"}

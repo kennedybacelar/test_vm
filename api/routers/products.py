@@ -30,10 +30,24 @@ def add_product_(
 
 
 @router.put("/products/update/{product_id}")
-def update_product_(product_id: str, product: ProductUpdate):
-    return update_product(product_id=product_id, product=product)
+def update_product_(
+    product_id: str,
+    product: ProductUpdate,
+    credentials: HTTPBasicCredentials = Depends(security),
+):
+    if is_authentication_successful(
+        username=credentials.username, password=credentials.password
+    ):
+        return update_product(
+            product_id=product_id, product=product, username=credentials.username
+        )
+    return {"message": "Authentication failure"}
 
 
 @router.delete("/products/delete/{product_id}")
-def deleting_product(product_id):
-    return delete_product(product_id)
+def deleting_product(product_id, credentials: HTTPBasicCredentials = Depends(security)):
+    if is_authentication_successful(
+        username=credentials.username, password=credentials.password
+    ):
+        return delete_product(product_id=product_id, username=credentials.username)
+    return {"message": "Authentication failure"}

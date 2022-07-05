@@ -8,6 +8,7 @@ from core.core_functions import (
     update_user,
     delete_user,
     is_authentication_successful,
+    get_my_user_info,
 )
 
 router = APIRouter()
@@ -29,11 +30,11 @@ def get_all_users_(credentials: HTTPBasicCredentials = Depends(security)):
 
 
 @router.get("/users/me")
-def get_my_user_info(credentials: HTTPBasicCredentials = Depends(security)):
+def get_my_user_info_(credentials: HTTPBasicCredentials = Depends(security)):
     if is_authentication_successful(
         username=credentials.username, password=credentials.password
     ):
-        return {"message": "User authenticated"}
+        return get_my_user_info(username=credentials.username)
     return {"message": "Authentication failure"}
 
 

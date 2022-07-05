@@ -81,3 +81,8 @@ class ProductUpdate(BaseModel):
         if not v % 5 == 0:
             raise ValueError("Should be multiple of 5")
         return v
+
+
+class ProductPurchase(BaseModel):
+    product_id: str
+    amount: int

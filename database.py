@@ -145,11 +145,59 @@ class SQLConnection:
             return self.get_user_balance(username=username)
         return {"message": "User not registered in vendor machine"}
 
-    def _getting_product_quantity(self, product_id: str):
-        pass
+    def get_user_by_id(self, username) -> dict:
+        if self._check_if_entry_exists(
+            table_name="users",
+            reference_column="username",
+            reference_value=username,
+        ):
+            cur = self.con.cursor()
+            cur.execute(f"select * from users where username='{username}';")
+            return [
+                dict(zip([d[0] for d in cur.description], row))
+                for row in cur.fetchall()
+            ][0]
+        return {"message": f"user {username} not registered in vendor machine"}
 
-    def buy_product(self, product_id: str, amount_to_be_purchased: int):
-        pass
+    def _get_product_by_id(self, product_id: str):
+        cur = self.con.cursor()
+        cur.execute(f"select * from products where id='{product_id}';")
+        return [
+            dict(zip([d[0] for d in cur.description], row)) for row in cur.fetchall()
+        ][0]
+
+    def buy_product(self, product_id: str, amount_to_be_purchased: int, username: str):
+        if not self._check_if_entry_exists(
+            table_name="products",
+            reference_column="id",
+            reference_value=product_id,
+        ):
+            return {"message": f"product {product_id} not registered"}
+        product = self._get_product_by_id(product_id)
+        if amount_to_be_purchased > product["amount_available"]:
+            return {
+                "message": f"Stock not enough - Available quantity: {product['amount_available']}"
+            }
+        total_cost = product["cost"] * amount_to_be_purchased
+        user_balance = self.get_user_balance(username)["balance"]
+        if total_cost > user_balance:
+            return {"message": "Insufficient funds"}
+        self.update_existing_entry(
+            table_name="users",
+            reference_column="username",
+            reference_value=username,
+            data_to_be_update={"balance": user_balance - total_cost},
+        )
+        self.update_existing_entry(
+            table_name="products",
+            reference_column="id",
+            reference_value=product_id,
+            data_to_be_update={
+                "amount_available": product["amount_available"] - amount_to_be_purchased
+            },
+        )
+        self.reset_user_balance(username)
+        return {"user_change": user_balance - total_cost}
 
 
 sql_connection = SQLConnection()
