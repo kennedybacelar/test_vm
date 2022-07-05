@@ -1,5 +1,7 @@
-from pydantic import BaseModel, validator
 from typing import Optional
+import bcrypt
+from pydantic import BaseModel, validator
+from core.authentication import get_settings
 
 
 class DepositValue(BaseModel):
@@ -27,6 +29,13 @@ class User(BaseModel):
         if v not in allowed_roles:
             raise ValueError(f"Only allowed roles are {allowed_roles}")
         return v
+
+    @validator("password")
+    def encrypt_password(cls, pwd):
+        bytePwd = pwd.encode("utf-8")
+        mySalt = get_settings()["secret"].encode("utf-8")
+        hash = bcrypt.hashpw(bytePwd, mySalt).decode("utf-8")
+        return hash
 
 
 class Product(BaseModel):

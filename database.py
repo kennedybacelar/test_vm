@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 
 
 class SQLConnection:
@@ -10,6 +10,15 @@ class SQLConnection:
             "products": ("id", "name", "cost", "amount_available", "seller_id"),
         }
         self.creating_tables()
+
+    def _check_if_entry_exists(
+        self, table_name: str, reference_column: str, reference_value: Union[int, str]
+    ) -> int:
+        # Returns 0 if entry not found and 1 if it does
+        cur = self.con.cursor()
+        return cur.execute(
+            f"select exists(select 1 from {table_name} where {reference_column}='{reference_value}');"
+        ).fetchone()[0]
 
     def get_table_names(self):
         return list(self.tables.keys())
@@ -27,21 +36,34 @@ class SQLConnection:
             dict(zip([d[0] for d in cur.description], row)) for row in cur.fetchall()
         ]
 
+    def select_single_value_from_table_by_reference(
+        self,
+        table_name: str,
+        column_name: str,
+        reference_column: str,
+        reference_value: Union[str, int],
+    ) -> Tuple[bool, Optional[str]]:
+
+        if self._check_if_entry_exists(
+            table_name=table_name,
+            reference_column=reference_column,
+            reference_value=reference_value,
+        ):
+            cur = self.con.cursor()
+            return (
+                True,
+                cur.execute(
+                    f"select {column_name} from {table_name} where {reference_column}='{reference_value}'"
+                ).fetchone()[0],
+            )
+        return False, None
+
     def inserting_into_table(self, table_name: str, data: dict):
         cur = self.con.cursor()
         cur.execute(
             f"insert into {table_name}{tuple(data.keys())} values {tuple(data.values())}"
         )
         return True
-
-    def _check_if_entry_exists(
-        self, table_name: str, reference_column: str, reference_value: Union[int, str]
-    ) -> int:
-        # Returns 0 if entry not found and 1 if it does
-        cur = self.con.cursor()
-        return cur.execute(
-            f"select exists(select 1 from {table_name} where {reference_column}='{reference_value}');"
-        ).fetchone()[0]
 
     def update_existing_entry(
         self,
@@ -62,6 +84,8 @@ class SQLConnection:
                     for column, value in zip(
                         list(data_to_be_update.keys()), list(data_to_be_update.values())
                     )
+                    # To make sure it won't change the primary key
+                    if column != reference_column
                 ]
             )
             cur.execute(
@@ -71,6 +95,15 @@ class SQLConnection:
         return {
             "message": f"entry {reference_value} does not exist in table {table_name}"
         }
+
+    def delete_entry(
+        self, table_name: str, reference_column: str, reference_value: Union[str, int]
+    ):
+        cur = self.con.cursor()
+        cur.execute(
+            f"delete from {table_name} where {reference_column}='{reference_value}'"
+        )
+        return True
 
     def get_user_balance(self, username: str):
         if self._check_if_entry_exists(
@@ -99,10 +132,7 @@ class SQLConnection:
             )
             return self.get_user_balance(username=username)
         else:
-            cur.execute(
-                f"insert into users(username, balance) values ('{username}', '{deposit_value}')"
-            )
-            return self.get_user_balance(username=username)
+            return {"message": f"user {username} not registered in vendor machine"}
 
     def reset_user_balance(self, username):
         if self._check_if_entry_exists(

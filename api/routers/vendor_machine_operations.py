@@ -4,6 +4,7 @@ from core.core_functions import (
     get_user_balance,
     deposit_into_vendor_machine,
     reset_user_balance,
+    buy_product,
 )
 
 router = APIRouter()
@@ -20,8 +21,8 @@ def deposit_value(deposit: DepositValue):
 
 
 @router.post("/buy/{product_id}")
-def buy_product(product_id):
-    return "buying product"
+def buy_product_(product_id):
+    return buy_product(product_id)
 
 
 @router.post("/reset")
