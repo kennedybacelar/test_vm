@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from datatypes.datatypes import User
+from datatypes.datatypes import User, UserUpdate
 from core.core_functions import (
     is_authentication_successful,
     registering_user,
@@ -39,7 +39,9 @@ def get_my_user_info(credentials: HTTPBasicCredentials = Depends(security)):
 
 @router.put("/users/update/{username}")
 def update_user_(
-    username: str, user: User, credentials: HTTPBasicCredentials = Depends(security)
+    username: str,
+    user: UserUpdate,
+    credentials: HTTPBasicCredentials = Depends(security),
 ):
     if is_authentication_successful(
         username=credentials.username, password=credentials.password

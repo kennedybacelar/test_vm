@@ -2,7 +2,6 @@ from typing import List, Tuple, Union
 import bcrypt
 from datatypes.datatypes import User, Product
 from database import sql_connection
-from .authentication import get_settings
 
 
 def is_authentication_successful(username: Union[str, int], password: str):
@@ -39,10 +38,13 @@ def get_all_products() -> List[Product]:
     return sql_connection.selecting_from_table(table_name="products")
 
 
-def add_product(product: Product) -> bool:
-    return sql_connection.inserting_into_table(
-        table_name="products", data=dict(product)
-    )
+def add_product(product: Product, username: str) -> bool:
+    if _get_user_role(username) == "seller":
+        product.seller_id = username
+        return sql_connection.inserting_into_table(
+            table_name="products", data=dict(product)
+        )
+    return {"user should be seller to register products"}
 
 
 def update_product(product_id: str, product: Product) -> bool:
@@ -96,7 +98,7 @@ def _get_user_role(username: str) -> Tuple[bool, str]:
         column_name="role",
         reference_column="username",
         reference_value=username,
-    )
+    )[1]
 
 
 def buy_product(product_id):

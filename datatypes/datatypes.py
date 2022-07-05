@@ -38,12 +38,43 @@ class User(BaseModel):
         return hash
 
 
+class UserUpdate(BaseModel):
+    password: str
+    role: str
+
+    @validator("role")
+    def validating_input_role(cls, v):
+        allowed_roles = ("buyer", "seller")
+        if v not in allowed_roles:
+            raise ValueError(f"Only allowed roles are {allowed_roles}")
+        return v
+
+    @validator("password")
+    def encrypt_password(cls, pwd):
+        bytePwd = pwd.encode("utf-8")
+        mySalt = get_settings()["secret"].encode("utf-8")
+        hash = bcrypt.hashpw(bytePwd, mySalt).decode("utf-8")
+        return hash
+
+
 class Product(BaseModel):
     id: str
     name: str
     cost: int
     amount_available: int
-    seller_id: Optional[int] = 0
+    seller_id: Optional[str] = None
+
+    @validator("cost")
+    def must_be_multiple_of_5(cls, v):
+        if not v % 5 == 0:
+            raise ValueError("Should be multiple of 5")
+        return v
+
+
+class ProductUpdate(BaseModel):
+    name: str
+    cost: int
+    amount_available: int
 
     @validator("cost")
     def must_be_multiple_of_5(cls, v):
