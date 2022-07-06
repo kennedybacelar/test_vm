@@ -9,11 +9,7 @@ sys.path.insert(0, parentdir)
 from database import sql_connection
 
 URL_BASE = "http://127.0.0.1:8000"
-
-
-@pytest.fixture(scope="function")
-def cleaning_db():
-    print("******** EH SIM *********")
+sql_connection._cleaning_db()
 
 
 def _defining_user_sample() -> Tuple[str, str]:
@@ -21,14 +17,12 @@ def _defining_user_sample() -> Tuple[str, str]:
 
 
 def _return_product_sample():
-
     sample_product = {
         "id": "prod-1",
         "name": "pencil",
         "cost": 35,
         "amount_available": 17,
     }
-
     return sample_product
 
 
@@ -38,9 +32,9 @@ def _registering_user(username: str, password: str, role: str = "buyer"):
     new_user = {
         "username": username,
         "password": password,
-        "role": "buyer",
+        "role": role,
     }
-    res = requests.post(url=url, json=new_user, headers=headers)
+    return requests.post(url=url, json=new_user, headers=headers)
 
 
 def _get_authentication_credentials_in_base_64(username: str, password: str) -> str:
@@ -111,16 +105,22 @@ def test_add_product():
     )
     headers = {"Authorization": f"Basic {credentials_in_base_64}"}
 
-    requests.post(final_url, json=product, headers=headers)
+    assert requests.post(final_url, json=product, headers=headers).json() == True
 
 
-def buy_product():
+def test_buy_product():
+
     username_sample = "kennedy.bacelar"
     password_sample = "password"
+    final_url = URL_BASE + "/buy"
 
     credentials_in_base_64 = _get_authentication_credentials_in_base_64(
         username=username_sample, password=password_sample
     )
     headers = {"Authorization": f"Basic {credentials_in_base_64}"}
+    body = {"product_id": "prod-1", "amount": 1}
 
-    # Missing implementing the change in sorted coins
+    purchase_response = requests.post(final_url, headers=headers, json=body).json()
+    expected_response = {"message": "Purchase_succssesful", "change": [[1, 10], [1, 5]]}
+
+    assert purchase_response == expected_response
