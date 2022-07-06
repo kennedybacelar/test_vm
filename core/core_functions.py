@@ -127,11 +127,26 @@ def delete_user(username: str):
 
 
 def buy_product(product_purchase: ProductPurchase, username: str):
+    coins_available_for_change = [5, 10, 20, 50, 100]
+    coins_available_for_change.reverse()
     _, user_role = _get_user_role(username)
     if user_role == "buyer":
-        return sql_connection.buy_product(
+        purchase_succssesful, response_message = sql_connection.buy_product(
             product_id=product_purchase.product_id,
             amount_to_be_purchased=product_purchase.amount,
             username=username,
         )
+        if purchase_succssesful:
+            change_in_coins = []
+            change = response_message["user_change"]
+            if change >= coins_available_for_change[-1]:
+                for coin in coins_available_for_change:
+                    if change < coin:
+                        continue
+                    div_result, remainder = divmod(change, coin)
+                    change_in_coins.append((div_result, coin))
+                    change = remainder
+            return {"message": "Purchase_succssesful", "change": change_in_coins}
+        return response_message
+
     return {"message": "User needs to be a buyer in order to perform this operation"}

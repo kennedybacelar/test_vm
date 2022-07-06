@@ -185,32 +185,33 @@ class SQLConnection:
             reference_column="id",
             reference_value=product_id,
         ):
-            return {"message": f"product {product_id} not registered"}
+            return False, {"message": f"product {product_id} not registered"}
         product = self._get_product_by_id(product_id)
-        if amount_to_be_purchased > product["amount_available"]:
-            return {
+        if amount_to_be_purchased > int(product["amount_available"]):
+            return False, {
                 "message": f"Stock not enough - Available quantity: {product['amount_available']}"
             }
-        total_cost = product["cost"] * amount_to_be_purchased
+        total_cost = int(product["cost"] * amount_to_be_purchased)
         user_balance = self.get_user_balance(username)["balance"]
-        if total_cost > user_balance:
-            return {"message": "Insufficient funds"}
+        if total_cost > int(user_balance):
+            return False, {"message": "Insufficient funds"}
         self.update_existing_entry(
             table_name="users",
             reference_column="username",
             reference_value=username,
-            data_to_be_update={"balance": user_balance - total_cost},
+            data_to_be_update={"balance": int(user_balance) - total_cost},
         )
         self.update_existing_entry(
             table_name="products",
             reference_column="id",
             reference_value=product_id,
             data_to_be_update={
-                "amount_available": product["amount_available"] - amount_to_be_purchased
+                "amount_available": int(int(product["amount_available"]))
+                - amount_to_be_purchased
             },
         )
         self.reset_user_balance(username)
-        return {"user_change": user_balance - total_cost}
+        return True, {"user_change": int(user_balance) - total_cost}
 
     def delete_from_table(self, table_name: str):
         cur = self.con.cursor()
