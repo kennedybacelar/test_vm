@@ -6,9 +6,9 @@ from database import sql_connection
 
 def is_authentication_successful(username: Union[str, int], password: str):
 
+    # Some encoding methods add a new line to base64 representation
     username = username.replace("\n", "")
     password = password.replace("\n", "")
-    # in a real application this is supposed to stay in a local file like .secrets.env
     (
         found_entry,
         stored_password_hash,

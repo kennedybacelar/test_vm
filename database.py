@@ -1,15 +1,33 @@
 import sqlite3
 from typing import Union, Tuple, Optional
+import os
 
 
 class SQLConnection:
     def __init__(self):
-        self.con = sqlite3.connect(":memory:", check_same_thread=False)
+        db_file_name = "my_db"
+        # self._reset_db(db_file_name)
+        self.con = sqlite3.connect(
+            f"file:{db_file_name}?cache=shared",
+            uri=True,
+            check_same_thread=False,
+            isolation_level=None,
+            timeout=0.01,
+        )
         self.tables = {
             "users": ("username", "password", "balance", "role"),
             "products": ("id", "name", "cost", "amount_available", "seller_id"),
         }
         self.creating_tables()
+
+    def creating_tables(self):
+        cur = self.con.cursor()
+        for table_name, columns in self.tables.items():
+            cur.execute(f"create table if not exists {table_name} {columns}")
+
+    def _reset_db(self, db_file_name):
+        if os.path.exists(db_file_name):
+            os.remove(db_file_name)
 
     def _check_if_entry_exists(
         self, table_name: str, reference_column: str, reference_value: Union[int, str]
@@ -22,11 +40,6 @@ class SQLConnection:
 
     def get_table_names(self):
         return list(self.tables.keys())
-
-    def creating_tables(self):
-        cur = self.con.cursor()
-        for table_name, columns in self.tables.items():
-            cur.execute(f"create table {table_name} {columns}")
 
     def selecting_from_table(self, table_name: str):
         cur = self.con.cursor()
@@ -198,6 +211,10 @@ class SQLConnection:
         )
         self.reset_user_balance(username)
         return {"user_change": user_balance - total_cost}
+
+    def delete_from_table(self, table_name: str):
+        cur = self.con.cursor()
+        cur.execute(f"delete from {table_name}")
 
 
 sql_connection = SQLConnection()
