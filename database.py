@@ -3,6 +3,26 @@ from typing import Union, Tuple, Optional
 import os
 
 
+def _creating_tables(connection):
+    users = "CREATE TABLE if not exists users (\
+            username TEXT PRIMARY KEY,\
+            password TEXT,\
+            balance INTEGER,\
+            role TEXT\
+            );"
+
+    products = "CREATE TABLE if not exists products (\
+                id TEXT PRIMARY KEY,\
+                name TEXT,\
+                cost INTEGER,\
+                amount_available TEXT,\
+                seller_id TEXT\
+                );"
+
+    connection.execute(users)
+    connection.execute(products)
+
+
 class SQLConnection:
     def __init__(self):
         db_file_name = "my_db"
@@ -24,9 +44,7 @@ class SQLConnection:
         return self._tables.keys()
 
     def creating_tables(self):
-        cur = self.con.cursor()
-        for table_name, columns in self._tables.items():
-            cur.execute(f"create table if not exists {table_name} {columns}")
+        _creating_tables(self.con.cursor())
 
     def _cleaning_db(self):
         for table in self.tables:
@@ -74,7 +92,7 @@ class SQLConnection:
     def inserting_into_table(self, table_name: str, data: dict):
         cur = self.con.cursor()
         cur.execute(
-            f"insert into {table_name}{tuple(data.keys())} values {tuple(data.values())}"
+            f"insert or replace into {table_name}{tuple(data.keys())} values {tuple(data.values())}"
         )
         return True
 

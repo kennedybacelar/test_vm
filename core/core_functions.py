@@ -1,3 +1,4 @@
+import sqlite3
 from typing import List, Tuple, Union, Optional
 import bcrypt
 from datatypes.datatypes import User, Product, ProductPurchase
