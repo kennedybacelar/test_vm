@@ -126,9 +126,21 @@ def delete_user(username: str):
     )
 
 
+def _get_change_in_coins(change: int):
+    coins_available_for_change = [100, 50, 20, 10, 5]
+    change_in_coins = []
+    if change >= coins_available_for_change[-1]:
+        for coin in coins_available_for_change:
+            if change < coin:
+                continue
+            div_result, remainder = divmod(change, coin)
+            change_in_coins.append((div_result, coin))
+            change = remainder
+        return change_in_coins
+    return 0
+
+
 def buy_product(product_purchase: ProductPurchase, username: str):
-    coins_available_for_change = [5, 10, 20, 50, 100]
-    coins_available_for_change.reverse()
     _, user_role = _get_user_role(username)
     if user_role == "buyer":
         purchase_succssesful, response_message = sql_connection.buy_product(
@@ -137,16 +149,8 @@ def buy_product(product_purchase: ProductPurchase, username: str):
             username=username,
         )
         if purchase_succssesful:
-            change_in_coins = []
             change = response_message["user_change"]
-            if change >= coins_available_for_change[-1]:
-                for coin in coins_available_for_change:
-                    if change < coin:
-                        continue
-                    div_result, remainder = divmod(change, coin)
-                    change_in_coins.append((div_result, coin))
-                    change = remainder
+            change_in_coins = _get_change_in_coins(change)
             return {"message": "Purchase_succssesful", "change": change_in_coins}
         return response_message
-
     return {"message": "User needs to be a buyer in order to perform this operation"}
