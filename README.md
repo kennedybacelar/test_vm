@@ -5,13 +5,13 @@ Selection process - backend1 exercise
 - Install poetry with $ pip install poetry
 - Install dependencies with $ poetry install
 
-### Running the server
+### Running the server ( At root level of the project )
 - Activate the environment with $ poetry shell
-- At root level of the project $ uvicorn api.main:app --reload
+- Run the server with $ uvicorn api.main:app --reload
 
-### Running tests
+### Running tests ( At root level of the project )
 - activate the environment with $ poetry shell
-- Run the tests with - at the root of project $ pytest tests/test_vendor_machine_operations.py
+- Run the tests with $ pytest tests/test_vendor_machine_operations.py
 
 ### Athentication
 Except by registering new user - all API endpoints require authentication.
