@@ -1,15 +1,17 @@
 ## test_vm
 Selection process - backend1 exercise
 
+**All steps below must be performed at root level of the project**
+
 ### Setting environment
 - Install poetry with $ pip install poetry
 - Install dependencies with $ poetry install
 
-### Running the server ( At root level of the project )
+### Running the server
 - Activate the environment with $ poetry shell
 - Run the server with $ uvicorn api.main:app --reload
 
-### Running tests ( At root level of the project )
+### Running tests
 - activate the environment with $ poetry shell
 - Run the tests with $ pytest tests/test_vendor_machine_operations.py
 
