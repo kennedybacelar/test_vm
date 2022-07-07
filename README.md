@@ -17,7 +17,7 @@ Selection process - backend1 exercise
 
 ### Athentication
 Except by registering new user - all API endpoints require authentication.
-The authentication method is basic authentication, it should be inclued in the request headers in the following format: 
+The authentication method is basic authentication, it should be included in the request headers in the following format: 
 
 The credentials in base 64 should be a conversion of the following format: $ username:password
 
