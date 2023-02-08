@@ -26,3 +26,5 @@ headers = { "Authorization": "Basic {credentials_in_base_64}" }
 e.g, for the user ronaldo.brazilian with password = password, the authentication header should be in the following format.
 
 {"Authorization": "Basic cm9uYWxkby5icmF6aWxpYW46cGFzc3dvcmQ="}
+
+Dot.
